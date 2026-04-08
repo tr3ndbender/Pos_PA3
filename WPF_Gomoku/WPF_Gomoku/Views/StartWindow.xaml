@@ -1,0 +1,45 @@
+<Window x:Class="WPF_Gomoku.Views.StartWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Gomoku – Neues Spiel"
+        Width="320" Height="370"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+
+    <StackPanel Margin="20">
+
+        <TextBlock Text="Gomoku" FontSize="28" FontWeight="Bold"
+                   HorizontalAlignment="Center" Margin="0,0,0,20"/>
+
+        <!-- Spielmodus wählen -->
+        <GroupBox Header="Spielmodus" Padding="8" Margin="0,0,0,10">
+            <StackPanel>
+                <RadioButton x:Name="rbHuman"    Content="Mensch vs. Mensch"   IsChecked="True" Margin="0,3"/>
+                <RadioButton x:Name="rbComputer" Content="Mensch vs. Computer" Margin="0,3"/>
+                <RadioButton x:Name="rbServer"   Content="Netzwerk – Server"   Margin="0,3"/>
+                <RadioButton x:Name="rbClient"   Content="Netzwerk – Client"   Margin="0,3"
+                             Checked="rbClient_Checked" Unchecked="rbClient_Unchecked"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Feldgröße (für alle Modi außer Client) -->
+        <StackPanel Orientation="Horizontal" Margin="0,5">
+            <TextBlock Text="Feldgröße:" Width="90" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtSize" Text="15" Width="45"/>
+            <TextBlock Text="  (5 – 19)" VerticalAlignment="Center" Foreground="Gray"/>
+        </StackPanel>
+
+        <!-- Server-IP (nur für Client sichtbar) -->
+        <StackPanel x:Name="pnlIp" Orientation="Horizontal" Margin="0,5"
+                    Visibility="Collapsed">
+            <TextBlock Text="Server-IP:" Width="90" VerticalAlignment="Center"/>
+            <TextBox x:Name="txtIp" Text="127.0.0.1" Width="130"/>
+        </StackPanel>
+
+        <!-- Start-Button -->
+        <Button x:Name="btnStart" Content="Spiel starten"
+                Height="36" Margin="0,20,0,0"
+                Click="BtnStart_Click"/>
+
+    </StackPanel>
+</Window>

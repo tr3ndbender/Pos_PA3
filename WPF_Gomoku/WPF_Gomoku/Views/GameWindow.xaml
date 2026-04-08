@@ -1,0 +1,118 @@
+<Window x:Class="WPF_Gomoku.Views.GameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:models="clr-namespace:WPF_Gomoku.Models"
+        Title="Gomoku"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+
+        <!--
+            DataTemplate für Cell-Objekte
+            ══════════════════════════════════════════════════════
+            DataType="{x:Type models:Cell}"  → wird automatisch angewendet
+            wenn WPF ein Cell-Objekt anzeigen soll (implizites DataTemplate,
+            kein Key → keine explizite Referenz nötig).
+
+            Jede Zelle = ein Button (damit er klickbar ist)
+              Command          → gebunden an CellClickCommand im Controller
+              CommandParameter → die Cell selbst (wird an CellClicked übergeben)
+
+            RelativeSource AncestorType=ItemsControl:
+              Im DataContext der Zelle liegt die Cell selbst.
+              Wir müssen aber den Controller (DataContext des Fensters / ItemsControl)
+              erreichen um an CellClickCommand zu binden.
+              → "Geh zum übergeordneten ItemsControl und hole dessen DataContext"
+        -->
+        <DataTemplate DataType="{x:Type models:Cell}">
+            <Button Width="40" Height="40"
+                    Command="{Binding DataContext.CellClickCommand,
+                              RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                    CommandParameter="{Binding}"
+                    ToolTip="{Binding State}">
+
+                <!-- Eigenes ControlTemplate: entfernt den Standard-Button-Look -->
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="#DEB887"
+                                BorderBrush="#8B7355" BorderThickness="0.5">
+                            <!-- Stein als Ellipse -->
+                            <Ellipse Margin="4">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <!-- Standard: unsichtbar (leere Zelle) -->
+                                        <Setter Property="Fill" Value="Transparent"/>
+
+                                        <Style.Triggers>
+                                            <!--
+                                                DataTrigger: Reagiert auf den Wert einer gebundenen Property.
+                                                Binding="{Binding State}" → die State-Property der Cell
+                                                Value=Black → wenn State == Black, dann Fill = Black
+                                            -->
+                                            <DataTrigger Binding="{Binding State}"
+                                                         Value="{x:Static models:CellState.Black}">
+                                                <Setter Property="Fill"   Value="Black"/>
+                                            </DataTrigger>
+
+                                            <DataTrigger Binding="{Binding State}"
+                                                         Value="{x:Static models:CellState.White}">
+                                                <Setter Property="Fill"            Value="White"/>
+                                                <Setter Property="Stroke"          Value="DarkGray"/>
+                                                <Setter Property="StrokeThickness" Value="1.5"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </DataTemplate>
+
+    </Window.Resources>
+
+    <DockPanel>
+
+        <!-- Statusleiste oben: zeigt wer dran ist / Gewinner -->
+        <Border DockPanel.Dock="Top" Background="#2C3E50" Padding="12,8">
+            <!--
+                Binding an StatusMessage des Controllers (DataContext = IGameController)
+                Wenn StatusMessage sich ändert (PropertyChanged), aktualisiert WPF automatisch
+            -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="White" FontSize="15"
+                       HorizontalAlignment="Center"/>
+        </Border>
+
+        <!--
+            Spielfeld: ItemsControl mit UniformGrid
+            ════════════════════════════════════════
+            ItemsSource="{Binding Board.Cells}"
+              → Board ist eine Property des Controllers (DataContext)
+              → Cells ist eine ObservableCollection<Cell>
+
+            ItemsPanel = UniformGrid:
+              Der Hinweis sagt: "solange die richtige Anzahl Elemente eingefügt wird,
+              muss die Spalten- und Zeilenanzahl nicht gesetzt werden."
+              → WPF berechnet automatisch die quadratische Anordnung (z.B. 225 Items → 15×15)
+
+            ItemTemplate wird NICHT explizit gesetzt:
+              Da das DataTemplate oben DataType=Cell hat (ohne Key),
+              wendet WPF es automatisch für alle Cell-Objekte an.
+        -->
+        <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Board.Cells}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <!-- Rows/Columns NICHT setzen – wird automatisch berechnet -->
+                        <UniformGrid/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+        </ScrollViewer>
+
+    </DockPanel>
+</Window>

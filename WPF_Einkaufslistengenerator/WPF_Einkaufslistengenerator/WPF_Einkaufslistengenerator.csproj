@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- CSV-Bibliothek für LINQ -->
+    <PackageReference Include="LINQtoCSVCore" Version="1.6.0" />
+  </ItemGroup>
+
+  <!-- CSV-Datei wird ins Ausgabeverzeichnis kopiert -->
+  <ItemGroup>
+    <Content Include="Produkte.csv">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>

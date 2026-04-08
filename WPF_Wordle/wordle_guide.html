@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>WPF Wordle – Test-Leitfaden</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Segoe UI, Arial, sans-serif; background: #1e1e2e; color: #cdd6f4; line-height: 1.6; }
+  .container { max-width: 1000px; margin: 0 auto; padding: 30px 20px; }
+
+  h1 { font-size: 2rem; color: #cba6f7; border-bottom: 2px solid #cba6f7; padding-bottom: 10px; margin-bottom: 20px; }
+  h2 { font-size: 1.3rem; color: #89b4fa; margin: 30px 0 10px 0; border-left: 4px solid #89b4fa; padding-left: 12px; }
+  h3 { font-size: 1rem; color: #94e2d5; margin: 16px 0 6px 0; }
+  p  { margin: 8px 0; color: #bac2de; }
+
+  /* Navigation */
+  .toc { background: #181825; border: 1px solid #313244; border-radius: 8px; padding: 16px 20px; margin-bottom: 30px; }
+  .toc h2 { margin-top: 0; border: none; padding: 0; color: #cba6f7; font-size: 1rem; margin-bottom: 10px; }
+  .toc a { display: block; color: #89dceb; text-decoration: none; padding: 3px 0; font-size: 0.95rem; }
+  .toc a:hover { color: #cba6f7; }
+  .toc-num { color: #f38ba8; font-weight: bold; margin-right: 8px; }
+
+  /* Aufgaben-Karten */
+  .task { background: #181825; border: 1px solid #313244; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+  .task-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .task-num { background: #cba6f7; color: #1e1e2e; font-weight: bold; font-size: 1.1rem; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .task-title { font-size: 1.1rem; font-weight: bold; color: #cdd6f4; }
+
+  /* Datei-Badge */
+  .file { background: #313244; color: #a6e3a1; font-family: Consolas, monospace; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; display: inline-block; margin: 6px 0; }
+  .nuget { background: #313244; color: #fab387; font-family: Consolas, monospace; font-size: 0.8rem; padding: 2px 8px; border-radius: 4px; display: inline-block; margin: 6px 0; }
+
+  /* Code-Blöcke */
+  pre { background: #11111b; border: 1px solid #313244; border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin: 8px 0; font-size: 0.85rem; line-height: 1.5; }
+  code { font-family: Consolas, 'Courier New', monospace; }
+
+  /* Syntax Highlighting */
+  .kw  { color: #cba6f7; } /* keyword */
+  .tp  { color: #89b4fa; } /* type */
+  .st  { color: #a6e3a1; } /* string */
+  .cm  { color: #6c7086; font-style: italic; } /* comment */
+  .nm  { color: #fab387; } /* name/method */
+  .xt  { color: #f38ba8; } /* xml tag */
+  .xv  { color: #a6e3a1; } /* xml value */
+  .at  { color: #f9e2af; } /* attribute */
+  .pl  { background: #f38ba8; color: #1e1e2e; font-weight: bold; border-radius: 3px; padding: 0 3px; } /* placeholder */
+
+  /* Platzhalter-Tabelle */
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th { background: #313244; color: #cba6f7; padding: 8px 12px; text-align: left; font-size: 0.9rem; }
+  td { padding: 7px 12px; border-bottom: 1px solid #313244; font-size: 0.9rem; font-family: Consolas, monospace; }
+  tr:last-child td { border-bottom: none; }
+  .val { color: #a6e3a1; }
+  .desc { color: #bac2de; font-family: Segoe UI, Arial, sans-serif; }
+
+  /* Hinweis-Box */
+  .hint { background: #1e3a5f; border-left: 4px solid #89b4fa; border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 10px 0; font-size: 0.9rem; color: #bac2de; }
+  .warn { background: #3a2a1e; border-left: 4px solid #fab387; border-radius: 0 6px 6px 0; padding: 10px 14px; margin: 10px 0; font-size: 0.9rem; color: #bac2de; }
+
+  /* Reihenfolge */
+  .order { background: #1e2a1e; border: 1px solid #a6e3a1; border-radius: 8px; padding: 14px 18px; margin-top: 30px; }
+  .order h2 { color: #a6e3a1; border-color: #a6e3a1; margin-top: 0; }
+  .order ol { margin-left: 20px; color: #bac2de; }
+  .order li { padding: 3px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>WPF Wordle – Test-Leitfaden</h1>
+
+<!-- Platzhalter-Tabelle -->
+<div class="task">
+  <div class="task-header">
+    <div style="background:#f38ba8;color:#1e1e2e;font-weight:bold;font-size:1rem;border-radius:6px;padding:4px 10px;">Platzhalter anpassen</div>
+  </div>
+  <table>
+    <tr><th>Platzhalter</th><th>Bedeutung</th><th>Beispiel</th></tr>
+    <tr><td class="pl" style="background:#f38ba8;color:#1e1e2e;">WORTLAENGE</td>     <td class="desc">Buchstabenanzahl des Zielworts</td>    <td class="val">7</td></tr>
+    <tr><td class="pl" style="background:#f38ba8;color:#1e1e2e;">ANZAHL_VERSUCHE</td><td class="desc">Erlaubte Versuche (= Grid Rows)</td>    <td class="val">6</td></tr>
+    <tr><td class="pl" style="background:#f38ba8;color:#1e1e2e;">DATENBANKNAME</td>  <td class="desc">Name der .db-Datei (ohne Endung)</td>   <td class="val">wordle</td></tr>
+    <tr><td class="pl" style="background:#f38ba8;color:#1e1e2e;">PORT</td>           <td class="desc">TCP-Port des Servers</td>               <td class="val">12345</td></tr>
+  </table>
+</div>
+
+<!-- Inhaltsverzeichnis -->
+<div class="toc">
+  <h2>Inhalt</h2>
+  <a href="#t1"><span class="toc-num">1</span> Datenbank mit ORM anbinden</a>
+  <a href="#t2"><span class="toc-num">2</span> Client-Server-Verbindung + zufälliges Wort via XML</a>
+  <a href="#t3"><span class="toc-num">3</span> GUI: TextBox + Raten-Button</a>
+  <a href="#t4"><span class="toc-num">4</span> Button: Validierung + Server-Check</a>
+  <a href="#t5"><span class="toc-num">5</span> UniformGrid mit ItemsControl + Einfärben</a>
+  <a href="#t6"><span class="toc-num">6</span> Versuchszähler</a>
+  <a href="#t7"><span class="toc-num">7</span> Fenster halbieren + Statistik</a>
+</div>
+
+<!-- ==================== AUFGABE 1 ==================== -->
+<div class="task" id="t1">
+  <div class="task-header">
+    <div class="task-num">1</div>
+    <div class="task-title">Datenbank mit ORM anbinden</div>
+  </div>
+
+  <span class="nuget">NuGet (Server-Projekt): Microsoft.EntityFrameworkCore.Sqlite</span>
+
+  <h3><span class="file">Models/WordEntry.cs</span></h3>
+<pre><code><kw>namespace</kw> Server.Models
+{
+    <kw>public class</kw> <tp>WordEntry</tp>
+    {
+        <kw>public int</kw> <nm>Id</nm> { <kw>get</kw>; <kw>set</kw>; }
+        <kw>public string</kw> <nm>Text</nm> { <kw>get</kw>; <kw>set</kw>; }
+    }
+}</code></pre>
+
+  <h3><span class="file">AppDbContext.cs</span></h3>
+<pre><code><kw>using</kw> Microsoft.EntityFrameworkCore;
+<kw>using</kw> Server.Models;
+
+<kw>namespace</kw> Server
+{
+    <kw>internal class</kw> <tp>AppDbContext</tp> : <tp>DbContext</tp>
+    {
+        <kw>public</kw> <tp>DbSet</tp>&lt;<tp>WordEntry</tp>&gt; <nm>Words</nm> { <kw>get</kw>; <kw>set</kw>; }
+
+        <kw>protected override void</kw> <nm>OnConfiguring</nm>(<tp>DbContextOptionsBuilder</tp> o)
+            =&gt; o.<nm>UseSqlite</nm>(<st>"Data Source=<pl>DATENBANKNAME</pl>.db"</st>);
+    }
+}</code></pre>
+
+  <h3><span class="file">Server.csproj</span> – DB ins Output kopieren</h3>
+<pre><code><xt>&lt;ItemGroup&gt;</xt>
+  <xt>&lt;None</xt> <at>Update</at>=<st>"<pl>DATENBANKNAME</pl>.db"</st><xt>&gt;</xt>
+    <xt>&lt;CopyToOutputDirectory&gt;</xt>Always<xt>&lt;/CopyToOutputDirectory&gt;</xt>
+  <xt>&lt;/None&gt;</xt>
+<xt>&lt;/ItemGroup&gt;</xt></code></pre>
+
+  <div class="warn">Wichtig: Die .db-Datei muss im Server-Projektordner liegen (nicht im bin-Ordner). "Always" kopiert sie bei jedem Build automatisch.</div>
+</div>
+
+<!-- ==================== AUFGABE 2 ==================== -->
+<div class="task" id="t2">
+  <div class="task-header">
+    <div class="task-num">2</div>
+    <div class="task-title">Client-Server-Verbindung + zufälliges Wort via XML</div>
+  </div>
+
+  <h3><span class="file">Server/Program.cs</span></h3>
+<pre><code><kw>using</kw> Server;
+<kw>using</kw> System.Net;
+<kw>using</kw> System.Net.Sockets;
+<kw>using</kw> System.Xml.Linq;
+<kw>using</kw> Server.Models;
+
+<cm>// DB beim Start sicherstellen</cm>
+<kw>using var</kw> db = <kw>new</kw> <tp>AppDbContext</tp>();
+db.Database.<nm>EnsureCreated</nm>();
+
+<kw>var</kw> listener = <kw>new</kw> <tp>TcpListener</tp>(<tp>IPAddress</tp>.Any, <pl>PORT</pl>);
+listener.<nm>Start</nm>();
+<tp>Console</tp>.<nm>WriteLine</nm>(<st>"Server läuft auf Port <pl>PORT</pl>..."</st>);
+
+<kw>while</kw> (<kw>true</kw>)
+{
+    <kw>var</kw> client = listener.<nm>AcceptTcpClient</nm>();
+    _ = <tp>Task</tp>.<nm>Run</nm>(() =&gt; <nm>HandleClient</nm>(client));
+}
+
+<kw>void</kw> <nm>HandleClient</nm>(<tp>TcpClient</tp> client)
+{
+    <kw>var</kw> stream = client.<nm>GetStream</nm>();
+    <kw>var</kw> reader = <kw>new</kw> <tp>StreamReader</tp>(stream);
+    <kw>var</kw> writer = <kw>new</kw> <tp>StreamWriter</tp>(stream) { AutoFlush = <kw>true</kw> };
+
+    <cm>// Zufälliges Wort aus DB (nur korrekte Länge)</cm>
+    <kw>using var</kw> db = <kw>new</kw> <tp>AppDbContext</tp>();
+    <kw>var</kw> allWords = db.Words.<nm>ToList</nm>().<nm>Where</nm>(w =&gt; w.Text.Length == <pl>WORTLAENGE</pl>).<nm>ToList</nm>();
+    <kw>var</kw> randomWord = allWords[<kw>new</kw> <tp>Random</tp>().<nm>Next</nm>(allWords.Count)].Text.<nm>ToUpper</nm>();
+
+    <cm>// Wort als XML senden</cm>
+    writer.<nm>WriteLine</nm>(<st>$"&lt;Word&gt;{randomWord}&lt;/Word&gt;"</st>);
+
+    <cm>// Auf Guesses warten</cm>
+    <kw>string</kw> line;
+    <kw>while</kw> ((line = reader.<nm>ReadLine</nm>()) != <kw>null</kw>)
+    {
+        <kw>var</kw> guess = <tp>XDocument</tp>.<nm>Parse</nm>(line).Root.Value;
+        <kw>var</kw> result = <nm>CheckGuess</nm>(guess, randomWord);
+        writer.<nm>WriteLine</nm>(result);
+    }
+}
+
+<kw>string</kw> <nm>CheckGuess</nm>(<kw>string</kw> guess, <kw>string</kw> word)
+{
+    <kw>var</kw> results = <kw>new char</kw>[word.Length];
+    <kw>for</kw> (<kw>int</kw> i = 0; i &lt; word.Length; i++)
+    {
+        <kw>if</kw> (guess[i] == word[i])             results[i] = <st>'G'</st>; <cm>// Grün</cm>
+        <kw>else if</kw> (word.<nm>Contains</nm>(guess[i]))  results[i] = <st>'Y'</st>; <cm>// Gelb</cm>
+        <kw>else</kw>                                  results[i] = <st>'X'</st>; <cm>// Grau</cm>
+    }
+    <kw>return</kw> <st>$"&lt;Result&gt;{string.Join(",", results)}&lt;/Result&gt;"</st>;
+}</code></pre>
+
+  <h3><span class="file">MainWindow.xaml.cs</span> – Verbindung im Konstruktor</h3>
+<pre><code><cm>// Felder oben in der Klasse:</cm>
+<tp>TcpClient</tp> _tcp;
+<tp>StreamReader</tp> _reader;
+<tp>StreamWriter</tp> _writer;
+<kw>string</kw> _serverWord = <st>""</st>;
+
+<cm>// Im Konstruktor nach InitializeComponent():</cm>
+_tcp = <kw>new</kw> <tp>TcpClient</tp>(<st>"127.0.0.1"</st>, <pl>PORT</pl>);
+<kw>var</kw> stream = _tcp.<nm>GetStream</nm>();
+_reader = <kw>new</kw> <tp>StreamReader</tp>(stream);
+_writer = <kw>new</kw> <tp>StreamWriter</tp>(stream) { AutoFlush = <kw>true</kw> };
+
+<kw>var</kw> xml = _reader.<nm>ReadLine</nm>();                    <cm>// "&lt;Word&gt;BEISPIEL&lt;/Word&gt;"</cm>
+_serverWord = <tp>XDocument</tp>.<nm>Parse</nm>(xml).Root.Value;  <cm>// → "BEISPIEL"</cm></code></pre>
+</div>
+
+<!-- ==================== AUFGABE 3 ==================== -->
+<div class="task" id="t3">
+  <div class="task-header">
+    <div class="task-num">3</div>
+    <div class="task-title">GUI: TextBox + Raten-Button</div>
+  </div>
+
+  <h3><span class="file">MainWindow.xaml</span> – linke Spalte</h3>
+<pre><code><xt>&lt;StackPanel</xt> <at>Grid.Column</at>=<st>"0"</st> <at>Margin</at>=<st>"10"</st> <at>HorizontalAlignment</at>=<st>"Center"</st><xt>&gt;</xt>
+
+    <xt>&lt;TextBox</xt> <at>x:Name</at>=<st>"GuessInput"</st> <at>MaxLength</at>=<st>"<pl>WORTLAENGE</pl>"</st>
+             <at>FontSize</at>=<st>"20"</st> <at>Width</at>=<st>"200"</st> <at>Margin</at>=<st>"0,10"</st><xt>/&gt;</xt>
+
+    <xt>&lt;Button</xt> <at>x:Name</at>=<st>"RatenButton"</st> <at>Content</at>=<st>"Raten"</st>
+            <at>Click</at>=<st>"RatenButton_Click"</st>
+            <at>Width</at>=<st>"100"</st> <at>FontSize</at>=<st>"16"</st> <at>Margin</at>=<st>"0,5"</st><xt>/&gt;</xt>
+
+    <cm>&lt;!-- ItemsControl kommt hier rein (Aufgabe 5) --&gt;</cm>
+
+<xt>&lt;/StackPanel&gt;</xt></code></pre>
+</div>
+
+<!-- ==================== AUFGABE 4 ==================== -->
+<div class="task" id="t4">
+  <div class="task-header">
+    <div class="task-num">4</div>
+    <div class="task-title">Button: Validierung + Server-Check + Einfärben</div>
+  </div>
+
+  <h3><span class="file">MainWindow.xaml.cs</span></h3>
+<pre><code><kw>private void</kw> <nm>RatenButton_Click</nm>(<kw>object</kw> sender, <tp>RoutedEventArgs</tp> e)
+{
+    <kw>var</kw> guess = GuessInput.Text.<nm>ToUpper</nm>().<nm>Trim</nm>();
+
+    <cm>// Validierung – muss genau WORTLAENGE Zeichen haben</cm>
+    <kw>if</kw> (guess.Length != <pl>WORTLAENGE</pl>)
+    {
+        <tp>MessageBox</tp>.<nm>Show</nm>(<st>"Das Wort muss genau <pl>WORTLAENGE</pl> Zeichen haben!"</st>, <st>"Fehler"</st>);
+        <kw>return</kw>;
+    }
+
+    <cm>// Guess zum Server schicken</cm>
+    _writer.<nm>WriteLine</nm>(<st>$"&lt;Guess&gt;{guess}&lt;/Guess&gt;"</st>);
+
+    <cm>// Ergebnis empfangen</cm>
+    <kw>var</kw> resultXml = _reader.<nm>ReadLine</nm>();           <cm>// "&lt;Result&gt;G,X,Y,...&lt;/Result&gt;"</cm>
+    <kw>var</kw> colors = <tp>XDocument</tp>.<nm>Parse</nm>(resultXml).Root.Value.<nm>Split</nm>(<st>','</st>);
+
+    <cm>// Grid einfärben</cm>
+    <nm>ColorRow</nm>(_currentRow, guess, colors);
+    _currentRow++;
+
+    <cm>// Gewonnen oder verloren?</cm>
+    <kw>if</kw> (colors.<nm>All</nm>(c =&gt; c == <st>"G"</st>))
+        <nm>EndGame</nm>(<kw>true</kw>);
+    <kw>else if</kw> (_currentRow &gt;= <pl>ANZAHL_VERSUCHE</pl>)
+        <nm>EndGame</nm>(<kw>false</kw>);
+
+    GuessInput.<nm>Clear</nm>();
+}</code></pre>
+</div>
+
+<!-- ==================== AUFGABE 5 ==================== -->
+<div class="task" id="t5">
+  <div class="task-header">
+    <div class="task-num">5</div>
+    <div class="task-title">UniformGrid mit ItemsControl + Einfärben</div>
+  </div>
+
+  <h3><span class="file">Models/Cell.cs</span> – WPF-Projekt</h3>
+<pre><code><kw>using</kw> System.ComponentModel;
+<kw>using</kw> System.Windows.Media;
+
+<kw>namespace</kw> WPF_Wordle.Models
+{
+    <kw>class</kw> <tp>Cell</tp> : <tp>INotifyPropertyChanged</tp>
+    {
+        <kw>private string</kw> _letter = <st>""</st>;
+        <kw>private</kw> <tp>Brush</tp> _color = <tp>Brushes</tp>.LightGray;
+
+        <kw>public string</kw> <nm>Letter</nm>
+        {
+            <kw>get</kw> =&gt; _letter;
+            <kw>set</kw> { _letter = <kw>value</kw>; <nm>OnPropertyChanged</nm>(<kw>nameof</kw>(Letter)); }
+        }
+        <kw>public</kw> <tp>Brush</tp> <nm>Color</nm>
+        {
+            <kw>get</kw> =&gt; _color;
+            <kw>set</kw> { _color = <kw>value</kw>; <nm>OnPropertyChanged</nm>(<kw>nameof</kw>(Color)); }
+        }
+
+        <kw>public event</kw> <tp>PropertyChangedEventHandler</tp>? <nm>PropertyChanged</nm>;
+        <kw>void</kw> <nm>OnPropertyChanged</nm>(<kw>string</kw> name) =&gt;
+            PropertyChanged?.Invoke(<kw>this</kw>, <kw>new</kw> <tp>PropertyChangedEventArgs</tp>(name));
+    }
+}</code></pre>
+
+  <h3><span class="file">MainWindow.xaml</span> – ItemsControl in den StackPanel einfügen</h3>
+<pre><code><xt>&lt;ItemsControl</xt> <at>x:Name</at>=<st>"GuessGrid"</st> <at>Margin</at>=<st>"0,15"</st><xt>&gt;</xt>
+    <xt>&lt;ItemsControl.ItemsPanel&gt;</xt>
+        <xt>&lt;ItemsPanelTemplate&gt;</xt>
+            <xt>&lt;UniformGrid</xt> <at>Rows</at>=<st>"<pl>ANZAHL_VERSUCHE</pl>"</st> <at>Columns</at>=<st>"<pl>WORTLAENGE</pl>"</st><xt>/&gt;</xt>
+        <xt>&lt;/ItemsPanelTemplate&gt;</xt>
+    <xt>&lt;/ItemsControl.ItemsPanel&gt;</xt>
+    <xt>&lt;ItemsControl.ItemTemplate&gt;</xt>
+        <xt>&lt;DataTemplate&gt;</xt>
+            <xt>&lt;Border</xt> <at>Background</at>=<st>"{Binding Color}"</st>
+                    <at>Width</at>=<st>"40"</st> <at>Height</at>=<st>"40"</st> <at>Margin</at>=<st>"2"</st><xt>&gt;</xt>
+                <xt>&lt;TextBlock</xt> <at>Text</at>=<st>"{Binding Letter}"</st>
+                           <at>HorizontalAlignment</at>=<st>"Center"</st>
+                           <at>VerticalAlignment</at>=<st>"Center"</st>
+                           <at>FontSize</at>=<st>"18"</st> <at>FontWeight</at>=<st>"Bold"</st><xt>/&gt;</xt>
+            <xt>&lt;/Border&gt;</xt>
+        <xt>&lt;/DataTemplate&gt;</xt>
+    <xt>&lt;/ItemsControl.ItemTemplate&gt;</xt>
+<xt>&lt;/ItemsControl&gt;</xt></code></pre>
+
+  <h3><span class="file">MainWindow.xaml.cs</span> – Zellen initialisieren + ColorRow</h3>
+<pre><code><cm>// Felder oben in der Klasse:</cm>
+<tp>ObservableCollection</tp>&lt;<tp>Cell</tp>&gt; _cells = <kw>new</kw>();
+
+<cm>// Im Konstruktor (nach InitializeComponent):</cm>
+<kw>for</kw> (<kw>int</kw> i = 0; i &lt; <pl>ANZAHL_VERSUCHE</pl> * <pl>WORTLAENGE</pl>; i++) _cells.<nm>Add</nm>(<kw>new</kw> <tp>Cell</tp>());
+GuessGrid.ItemsSource = _cells;</code></pre>
+
+<pre><code><cm>// ColorRow-Methode:</cm>
+<kw>void</kw> <nm>ColorRow</nm>(<kw>int</kw> row, <kw>string</kw> guess, <kw>string</kw>[] colors)
+{
+    <kw>for</kw> (<kw>int</kw> i = 0; i &lt; <pl>WORTLAENGE</pl>; i++)
+    {
+        _cells[row * <pl>WORTLAENGE</pl> + i].Letter = guess[i].<nm>ToString</nm>();
+        _cells[row * <pl>WORTLAENGE</pl> + i].Color = colors[i] <kw>switch</kw>
+        {
+            <st>"G"</st> =&gt; <tp>Brushes</tp>.Green,
+            <st>"Y"</st> =&gt; <tp>Brushes</tp>.Yellow,
+            _   =&gt; <tp>Brushes</tp>.Gray
+        };
+    }
+}</code></pre>
+</div>
+
+<!-- ==================== AUFGABE 6 ==================== -->
+<div class="task" id="t6">
+  <div class="task-header">
+    <div class="task-num">6</div>
+    <div class="task-title">Versuchszähler</div>
+  </div>
+
+<pre><code><cm>// Feld oben in der Klasse:</cm>
+<kw>int</kw> _currentRow = 0;
+
+<cm>// In RatenButton_Click – nach ColorRow:</cm>
+_currentRow++;  <cm>// zählt jeden Versuch hoch</cm>
+
+<cm>// Abfrage danach:</cm>
+<kw>if</kw> (colors.<nm>All</nm>(c =&gt; c == <st>"G"</st>))          <nm>EndGame</nm>(<kw>true</kw>);   <cm>// gewonnen</cm>
+<kw>else if</kw> (_currentRow &gt;= <pl>ANZAHL_VERSUCHE</pl>)  <nm>EndGame</nm>(<kw>false</kw>);  <cm>// verloren</cm></code></pre>
+
+  <div class="hint">_currentRow wird ERST hochgezählt, DANN geprüft. In EndGame zeigt _currentRow - 1 den Versuch an, bei dem erraten wurde.</div>
+</div>
+
+<!-- ==================== AUFGABE 7 ==================== -->
+<div class="task" id="t7">
+  <div class="task-header">
+    <div class="task-num">7</div>
+    <div class="task-title">Fenster halbieren + Statistik anzeigen</div>
+  </div>
+
+  <h3><span class="file">MainWindow.xaml</span> – 2-Spalten-Grid-Struktur</h3>
+<pre><code><xt>&lt;Window</xt> ... <at>Width</at>=<st>"500"</st> <at>Height</at>=<st>"550"</st><xt>&gt;</xt>
+<xt>&lt;Grid&gt;</xt>
+    <xt>&lt;Grid.ColumnDefinitions&gt;</xt>
+        <xt>&lt;ColumnDefinition</xt> <at>Width</at>=<st>"*"</st><xt>/&gt;</xt>               <cm>&lt;!-- Links: Spiel --&gt;</cm>
+        <xt>&lt;ColumnDefinition</xt> <at>x:Name</at>=<st>"StatsColumn"</st> <at>Width</at>=<st>"0"</st><xt>/&gt;</xt>  <cm>&lt;!-- Rechts: Statistik, anfangs 0 --&gt;</cm>
+    <xt>&lt;/Grid.ColumnDefinitions&gt;</xt>
+
+    <cm>&lt;!-- LINKS: StackPanel aus Aufgabe 3 (Grid.Column="0") --&gt;</cm>
+    <xt>&lt;StackPanel</xt> <at>Grid.Column</at>=<st>"0"</st> ...<xt>&gt;</xt> ... <xt>&lt;/StackPanel&gt;</xt>
+
+    <cm>&lt;!-- RECHTS: Statistik --&gt;</cm>
+    <xt>&lt;StackPanel</xt> <at>x:Name</at>=<st>"StatsPanel"</st> <at>Grid.Column</at>=<st>"1"</st>
+                <at>Visibility</at>=<st>"Collapsed"</st> <at>Margin</at>=<st>"20,10"</st><xt>&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"WordLabel"</st>  <at>FontSize</at>=<st>"16"</st> <at>FontWeight</at>=<st>"Bold"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat1"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat2"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat3"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat4"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat5"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"Stat6"</st><xt>/&gt;</xt>
+        <xt>&lt;Label</xt> <at>x:Name</at>=<st>"StatNever"</st><xt>/&gt;</xt>
+    <xt>&lt;/StackPanel&gt;</xt>
+<xt>&lt;/Grid&gt;</xt>
+<xt>&lt;/Window&gt;</xt></code></pre>
+
+  <h3><span class="file">MainWindow.xaml.cs</span> – Statistik-Array + EndGame-Methode</h3>
+<pre><code><cm>// Feld oben in der Klasse:</cm>
+<kw>int</kw>[] _stats = <kw>new int</kw>[<pl>ANZAHL_VERSUCHE</pl> + 1];
+<cm>// [0]..[ANZAHL_VERSUCHE-1] = beim 1./2./.../letzten Versuch erraten</cm>
+<cm>// [ANZAHL_VERSUCHE]        = nie erraten</cm></code></pre>
+
+<pre><code><kw>void</kw> <nm>EndGame</nm>(<kw>bool</kw> won)
+{
+    <cm>// Statistik aktualisieren</cm>
+    <kw>if</kw> (won) _stats[_currentRow - 1]++;
+    <kw>else</kw>     _stats[<pl>ANZAHL_VERSUCHE</pl>]++;
+
+    <cm>// Eingabe sperren</cm>
+    GuessInput.IsEnabled  = <kw>false</kw>;
+    RatenButton.IsEnabled = <kw>false</kw>;
+
+    <cm>// Fenster verbreitern (rechte Spalte aufmachen)</cm>
+    <kw>this</kw>.Width *= 2;
+    <kw>var</kw> grid = (<tp>Grid</tp>)<kw>this</kw>.Content;
+    grid.ColumnDefinitions[1].Width = <kw>new</kw> <tp>GridLength</tp>(1, <tp>GridUnitType</tp>.Star);
+
+    <cm>// Statistik einblenden</cm>
+    StatsPanel.Visibility = <tp>Visibility</tp>.Visible;
+    WordLabel.Content  = <st>$"Das Wort war: {_serverWord}"</st>;
+    Stat1.Content      = <st>$"Beim 1. Versuch: {_stats[0]}"</st>;
+    Stat2.Content      = <st>$"Beim 2. Versuch: {_stats[1]}"</st>;
+    Stat3.Content      = <st>$"Beim 3. Versuch: {_stats[2]}"</st>;
+    Stat4.Content      = <st>$"Beim 4. Versuch: {_stats[3]}"</st>;
+    Stat5.Content      = <st>$"Beim 5. Versuch: {_stats[4]}"</st>;
+    Stat6.Content      = <st>$"Beim 6. Versuch: {_stats[5]}"</st>;
+    StatNever.Content  = <st>$"Nie erraten: {_stats[<pl>ANZAHL_VERSUCHE</pl>]}"</st>;
+}</code></pre>
+</div>
+
+<!-- Reihenfolge -->
+<div class="order">
+  <h2>Reihenfolge beim Test</h2>
+  <ol>
+    <li>Server-Projekt anlegen → NuGet installieren → WordEntry.cs → AppDbContext.cs → .csproj anpassen</li>
+    <li>DB-Datei in den Server-Projektordner legen</li>
+    <li>Program.cs schreiben (TcpListener, HandleClient, CheckGuess)</li>
+    <li>WPF-Projekt anlegen → Cell.cs → MainWindow.xaml aufbauen → MainWindow.xaml.cs</li>
+    <li><strong>Server zuerst starten</strong>, dann WPF-Client starten</li>
+  </ol>
+</div>
+
+<p style="text-align:center; color:#6c7086; margin-top:30px; font-size:0.8rem;">WPF Wordle Leitfaden</p>
+</div>
+</body>
+</html>
