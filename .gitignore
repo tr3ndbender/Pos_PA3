@@ -11,6 +11,7 @@
 *.userosscache
 *.sln.docstates
 *.rsuser
+*.slnLaunch.user
 
 # NuGet
 *.nupkg
@@ -18,6 +19,11 @@ packages/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+
+# WPF Boilerplate (autogeneriert, überall identisch)
+App.xaml
+App.xaml.cs
+AssemblyInfo.cs
 
 # OS
 .DS_Store
