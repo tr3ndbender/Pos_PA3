@@ -14,16 +14,16 @@ namespace WPF_Wordle.Models
         public string Letter
         {
             get => _letter;
-            set { _letter = value; OnPropertyChanged(nameof(Letter)); }
+            set { _letter = value; OnPropertyChanged(); }
         }
         public Brush Color
         {
             get => _color;
-            set { _color = value; OnPropertyChanged(nameof(Color)); }
+            set { _color = value; OnPropertyChanged()); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
-        void OnPropertyChanged(string name) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        protected void OnPropertyChanged([CallerMemberName] string? prop = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
     }
 }
