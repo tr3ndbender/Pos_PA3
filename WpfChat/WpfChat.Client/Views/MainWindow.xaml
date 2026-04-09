@@ -1,0 +1,247 @@
+<Window x:Class="WpfChat.Client.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:conv="clr-namespace:WpfChat.Client.Converters"
+        Title="WPF Chat" Height="700" Width="1100"
+        Closing="Window_Closing" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <conv:UnreadColorConverter x:Key="UnreadColorConverter"/>
+    </Window.Resources>
+
+    <DockPanel>
+        <!-- Menu -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Datei">
+                <MenuItem Header="Trennen" Click="MnuDisconnect_Click"/>
+                <Separator/>
+                <MenuItem Header="Beenden" Click="MnuExit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Profil">
+                <MenuItem Header="Profilbild auswählen..." Click="MnuSelectAvatar_Click"/>
+                <MenuItem Header="Farbe ändern..." Click="MnuChangeColor_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Chat">
+                <MenuItem Header="Neuen Raum erstellen..." Click="MnuCreateRoom_Click"/>
+                <MenuItem Header="Raum betreten..." Click="MnuJoinRoom_Click"/>
+                <MenuItem Header="Private Nachricht..." Click="MnuPrivateMsg_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- Bottom: User Info Bar -->
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="20" Height="20" CornerRadius="10" Margin="0,0,6,0">
+                        <Border.Clip>
+                            <EllipseGeometry Center="10,10" RadiusX="10" RadiusY="10"/>
+                        </Border.Clip>
+                        <Image x:Name="ImgStatusAvatar" Stretch="UniformToFill"/>
+                    </Border>
+                    <TextBlock x:Name="TxtStatusUser" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <Rectangle x:Name="RctStatusColor" Width="16" Height="16"
+                               Margin="8,0,4,0" RadiusX="3" RadiusY="3"/>
+                </StackPanel>
+            </StatusBarItem>
+            <Separator/>
+            <StatusBarItem>
+                <TextBlock x:Name="TxtStatusServer"/>
+            </StatusBarItem>
+        </StatusBar>
+
+        <!-- Main Content -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" MinWidth="150"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="160" MinWidth="120"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: Rooms + Users -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="160"/>
+                </Grid.RowDefinitions>
+
+                <GroupBox Grid.Row="0" Header="Verfügbare Räume" Margin="4">
+                    <ListBox x:Name="LstRooms"
+                             MouseDoubleClick="LstRooms_DoubleClick"
+                             KeyDown="LstRooms_KeyDown"
+                             DisplayMemberPath="Name"/>
+                </GroupBox>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="4,2">
+                    <Button Content="+" ToolTip="Raum erstellen" Click="MnuCreateRoom_Click"
+                            Width="32" Height="28"/>
+                    <Button Content="→" ToolTip="Raum betreten" Click="BtnJoinRoom_Click"
+                            Width="32" Height="28" Margin="4,0"/>
+                </StackPanel>
+
+                <GroupBox Grid.Row="2" Header="Online-Benutzer" Margin="4">
+                    <ListBox x:Name="LstUsers" MouseDoubleClick="LstUsers_DoubleClick">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Ellipse Width="8" Height="8" Fill="LimeGreen"
+                                             VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="{Binding Username}"
+                                               Foreground="{Binding ColorBrush}"
+                                               FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </GroupBox>
+            </Grid>
+
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
+
+            <!-- Center: Chat Tabs -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TabControl x:Name="TabChats" Grid.Row="0"
+                            SelectionChanged="TabChats_SelectionChanged">
+                    <TabControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding HeaderText}"
+                                           Foreground="{Binding HasUnread, Converter={StaticResource UnreadColorConverter}}"/>
+                                <Button Content="✕" FontSize="9" Margin="6,0,0,0" Padding="2,0"
+                                        Tag="{Binding}"
+                                        Click="BtnCloseTab_Click"
+                                        Background="Transparent" BorderBrush="Transparent"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </TabControl.ItemTemplate>
+                    <TabControl.ContentTemplate>
+                        <DataTemplate>
+                            <ListView x:Name="LvMessages" ItemsSource="{Binding Messages}"
+                                      ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                      BorderThickness="0"
+                                      VirtualizingPanel.IsVirtualizing="False">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                                        <Setter Property="Padding" Value="0"/>
+                                        <Setter Property="Margin" Value="0"/>
+                                        <Setter Property="Background" Value="Transparent"/>
+                                        <Setter Property="BorderThickness" Value="0"/>
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Unified message template: private messages get orange background -->
+                                        <Border Margin="4,2" Padding="8" CornerRadius="6"
+                                                MaxWidth="720" HorizontalAlignment="Left">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#F0F0F0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPrivate}" Value="True">
+                                                            <Setter Property="Background" Value="#FFF3E0"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Width="46" Height="46"
+                                                        CornerRadius="23" Background="#CCC"
+                                                        VerticalAlignment="Top">
+                                                    <Border.Clip>
+                                                        <EllipseGeometry Center="23,23" RadiusX="23" RadiusY="23"/>
+                                                    </Border.Clip>
+                                                    <Image Source="{Binding SenderAvatarImage}" Stretch="UniformToFill"/>
+                                                </Border>
+                                                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                                        <TextBlock Text="{Binding SenderUsername}"
+                                                                   Foreground="{Binding SenderColorBrush}"
+                                                                   FontWeight="Bold" FontSize="13"/>
+                                                        <TextBlock Foreground="Gray" FontSize="11"
+                                                                   VerticalAlignment="Bottom" Margin="4,0,0,0">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text"
+                                                                            Value="{Binding Timestamp, StringFormat=' · {0:HH:mm}'}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding IsPrivate}" Value="True">
+                                                                            <Setter Property="Text"
+                                                                                    Value="{Binding Timestamp, StringFormat=' [PM] · {0:HH:mm}'}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Content}"
+                                                               TextWrapping="Wrap" FontSize="13"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                            </ListView>
+                        </DataTemplate>
+                    </TabControl.ContentTemplate>
+                </TabControl>
+
+                <!-- Input Row -->
+                <Grid Grid.Row="1" Margin="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TxtMessage" Grid.Column="0"
+                             Padding="8,6" FontSize="13"
+                             KeyDown="TxtMessage_KeyDown"
+                             VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="1" Content="Senden" Margin="4,0,0,0"
+                            Padding="12,6" Click="BtnSend_Click"
+                            Background="#2980b9" Foreground="White"/>
+                </Grid>
+            </Grid>
+
+            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch"/>
+
+            <!-- Right: My Profile -->
+            <Grid Grid.Column="4" Margin="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <GroupBox Header="Mein Profil">
+                    <StackPanel HorizontalAlignment="Center" Margin="4">
+                        <Border Width="80" Height="80" CornerRadius="40"
+                                Background="#DDD" Margin="0,8">
+                            <Border.Clip>
+                                <EllipseGeometry Center="40,40" RadiusX="40" RadiusY="40"/>
+                            </Border.Clip>
+                            <Image x:Name="ImgMyAvatar" Stretch="UniformToFill"/>
+                        </Border>
+                        <TextBlock x:Name="TxtMyUsername" HorizontalAlignment="Center"
+                                   FontWeight="Bold" FontSize="14"/>
+                        <Rectangle x:Name="RctMyColor" Height="20" Margin="8,4"
+                                   RadiusX="4" RadiusY="4"/>
+                        <Button Content="Bild ändern" Margin="0,4"
+                                Click="MnuSelectAvatar_Click"/>
+                        <Button Content="Farbe ändern"
+                                Click="MnuChangeColor_Click"/>
+                    </StackPanel>
+                </GroupBox>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>
