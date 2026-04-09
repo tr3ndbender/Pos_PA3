@@ -1,4 +1,0 @@
-<Solution>
-  <Project Path="Server/Server.csproj" />
-  <Project Path="Wordle/Wordle.csproj" />
-</Solution>
