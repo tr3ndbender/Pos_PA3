@@ -6,7 +6,7 @@ using System.Text;
 
 namespace WPF_Wordle.Models
 {
-    class Cell : INotifyPropertyChanged
+    public class Cell : INotifyPropertyChanged
     {
         private string _letter = "";
         private Brush _color = Brushes.LightGray;
@@ -19,7 +19,7 @@ namespace WPF_Wordle.Models
         public Brush Color
         {
             get => _color;
-            set { _color = value; OnPropertyChanged()); }
+            set { _color = value; OnPropertyChanged(); }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
