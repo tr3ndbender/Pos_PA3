@@ -31,3 +31,12 @@ Thumbs.db
 
 # Zip files
 *.zip
+
+# Publish output
+publish/
+
+# Claude settings
+.claude/
+
+# Database files
+*.db
