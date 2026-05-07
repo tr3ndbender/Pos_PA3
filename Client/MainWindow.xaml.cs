@@ -24,126 +24,102 @@ namespace Client
 {
     public partial class MainWindow : Window
     {
+        private int guess = 1;
 
         TcpClient client;
 
         Transfer<MSG> transfer;
+        private int currentZeile = 0;
+        public int FensterBreite = 200;
+        
+        public ObservableCollection<Cell> Zellen { get; set; } = new();
 
-        public ObservableCollection<string> FoundNames { get; set; } = new();
-        public ObservableCollection<string> AlternativeNames { get; set; } = new();
-        public List<long> Jahre = new List<long>();
-        public List<long> Count = new List<long>();
         public MainWindow()
         {
-            
+
             InitializeComponent();
             DataContext = this;
+            ErstelleGrid();
 
 
             client = new TcpClient("127.0.0.1", 12345);
 
             transfer = new Transfer<MSG>(client);
 
-            transfer.OnMessageReceived += (sender, msg) => {
-                // Achtung: kommt aus einem anderen Thread!
-                // msg.Names enthält z.B. die gefundenen Namen
-
-                if (msg.Type == MessageType.SEARCHRESULT)
+            transfer.OnMessageReceived += (sender, msg) =>
+            {
+                if (msg.Type == MessageType.RESPONSE)
                 {
-                    Dispatcher.BeginInvoke(() => { //BeginInvoke, weil sonst NetzwerkThread blockiert wird
-                        FoundNames.Clear();
-                        // Hier bist du wieder im UI-Thread — ObservableCollection befüllen ist sicher
-                        foreach (string name in msg.Names)
+                    if (msg.trueOrFalse == true)
+                    {
+                        Dispatcher.BeginInvoke(() =>
                         {
-                            FoundNames.Add(name);
-                        }
-                    });
-                }
-                else if (msg.Type == MessageType.ALTERNATIVERESULT)
-                {
-                    Dispatcher.BeginInvoke(() =>
-                    {
-                        AlternativeNamesComboBox.ItemsSource = msg.Names;
-                    });
-                }
-                else if (msg.Type == MessageType.DETAILRESULT)
-                {
-                    Jahre.Clear();
-                    Count.Clear();
+                            Fenster.Width = 850;
+                            Statistik.Visibility = Visibility.Visible;
+                        });
 
-                    foreach (Babyname b in msg.Details)
-                    {
-                        Jahre.Add(b.Year);
-                        Count.Add(b.Count);
+                        switch (guess)
+                        {
+                            case 1:
+                                Dispatcher.BeginInvoke(() => Versuch1Box.Text = "1");
+                                break;
+                            case 2:
+                                Dispatcher.BeginInvoke(() => Versuch2Box.Text = "1");
+                                break;
+                            case 3:
+                                Dispatcher.BeginInvoke(() => Versuch3Box.Text = "1");
+                                break;
+                            case 4:
+                                Dispatcher.BeginInvoke(() => Versuch4Box.Text = "1");
+                                break;
+                            case 5:
+                                Dispatcher.BeginInvoke(() => Versuch5Box.Text = "1");
+                                break;
+                            case 6:
+                                Dispatcher.BeginInvoke(() => Versuch6Box.Text = "1");
+                                break;
+                        }
+
                     }
 
-                    Dispatcher.BeginInvoke(() =>
+                    for (int i = 0; i < 7; i++)
                     {
-                        GroupByYearListBox.ItemsSource = Jahre;
-                        anzListBox.ItemsSource = Count;
-                    });
+                        Brush farbe = Brushes.Gray;
+                        if (msg.Results[i] == "G") farbe = Brushes.Green;
+                        else if (msg.Results[i] == "Y") farbe = Brushes.Yellow;
+                        setCell(currentZeile, i, msg.Wort[i], farbe);
+                    }
+                    currentZeile++;
+                    guess++;
                 }
-
             };
-
         }
 
-        private void suchButton_Click(object sender, RoutedEventArgs e)
+        private void ErstelleGrid()
         {
-            /* Methode 1
-            string gender = "";
-
-            if ((GenderComboBox.SelectedItem as ComboBoxItem).ToString() == "maennlich")
+            for (int i = 0; i < 42; i++)
             {
-                gender = "M";
+                Zellen.Add(new Cell());
             }
-            else
-            {
-                gender = "W";
-            }
-            */
-
-
-            MSG suchNachricht = new MSG()
-            {
-                Type = MessageType.SEARCH,
-                Search = namensSucheTB.Text,
-                Sex = (GenderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString() // bessere Methode 
-
-            };
-
-            transfer.Send(suchNachricht);
-
         }
 
-        private void FoundNamesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        public void setCell(int Zeile, int Spalte, char Buchstabe, Brush farbe)
         {
-            if (FoundNamesComboBox.SelectedItem == null) return;
-
-            MSG alternativeNachricht = new MSG()
-            {
-                Type = MessageType.ALTERNATIVE,
-                Sex = (GenderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(),
-                //Search = (FoundNamesComboBox.SelectedItem as ComboBoxItem).ToString(),
-                // -> ist falsch weil man nur braucht, wenn man manuell im xaml die items definiert
-                Search = FoundNamesComboBox.SelectedItem.ToString()
-            };
-
-            transfer.Send(alternativeNachricht);
+            var Zelle = Zellen[Zeile * 7 + Spalte]; //beginnend bei 0
+            Zelle.Buchstabe = Buchstabe;
+            Zelle.Farbe = farbe;
         }
 
-        private void AlternativeNamesComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void submitButton_Click(object sender, RoutedEventArgs e)
         {
-            if (FoundNamesComboBox.SelectedItem == null) return;
-
-            MSG detailNachricht = new MSG()
+            //if ((GuessBox.Text).Length != 7) return;
+            MSG guessNachricht = new MSG()
             {
-                Type = MessageType.DETAIL,
-                Sex = (GenderComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString(),
-                Search = FoundNamesComboBox.SelectedItem.ToString()
+                Type = MessageType.GUESS,
+                Wort = GuessBox.Text.ToUpper()
             };
 
-            transfer.Send(detailNachricht);
+            transfer.Send(guessNachricht);
         }
     }
 }

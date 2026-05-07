@@ -5,7 +5,6 @@ using Network;
 using Network;
 using NinjaNye.SearchExtensions.Soundex;
 using Server;
-using Server.Models;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -30,99 +29,92 @@ internal class Programm
         TcpClient client = server.AcceptTcpClient();
         Console.WriteLine("Client connected! " + client.Client.RemoteEndPoint);
 
+        // wenn man es mit CLI erstellt, muss man es so verwenden, anders als mit TT
+        var options = new DataOptions().UseSQLite(@"Data Source=Wordle.db");
+        using var db = new WordleDB(new DataOptions<WordleDB>(options));
 
-        using var db = new BabynamesDB(new DataOptions() // um auto generated TT zu nutzen, muss namespace Datamodels dazu
-            .UseSQLite(@"Data Source=Babynames.db"));
+        // wichtig Datenbank in AusgabeOrdner kopieren, sonst funktioniert nichts
 
-        var query = from b in db.Babynames
-                    select b;
+        var alle = db.Woerters.Select(w => w.Wort);
 
-        var alle = query.ToList();
-        var alleAlternative = alle.Select(b => b).DistinctBy(b => new { b.Name, b.Sex }).ToList();
+        Random rnd = new Random();
+        var liste = alle.ToList();
+        string initialWord = liste[rnd.Next(0, liste.Count)];
 
-        /* Test ob ORM Connection geklappt hat
-        foreach (Babyname babyname in alle)
+        string checkInitial = initialWord.ToUpper();
+        
+        bool checkFinished = false;
+
+        Console.WriteLine(initialWord);
+
+        List<String> controlGuess = new(); 
+
+        /*alle.ToList().ForEach(w =>
         {
-            Console.WriteLine(babyname.Name);
-        }
-        */
-
-
+            Console.WriteLine(w);
+        }); */
 
         Transfer<MSG> transfer = new Transfer<MSG>(client);
 
-            transfer.OnMessageReceived += (sender, msg) =>
+        transfer.OnMessageReceived += (sender, msg) =>
+        {
+            Transfer<MSG> t = (Transfer<MSG>)sender;
+
+            Console.WriteLine("Request received: " + msg.Type);
+            if (!checkFinished)
             {
-                Transfer<MSG> t = (Transfer<MSG>)sender;
-
-                if (msg.Type == MSG.MessageType.SEARCH)
+                if (msg.Type == MessageType.GUESS)
                 {
-                    Console.WriteLine("Request received: " + msg.Type);
+                    Console.WriteLine("Guess recieved: " + msg.Wort);
 
-                    var query = (from n in db.Babynames
-                                 where n.Name.StartsWith(msg.Search) && n.Sex == msg.Sex
-                                 select n.Name).Distinct();
-
-                    List<string> NamesList = query.ToList();
-
-                    MSG suchAntwort = new MSG()
+                    if (msg.Wort.Length != 7)
                     {
-                        Type = MessageType.SEARCHRESULT,
-                        Names = NamesList
+                        Console.WriteLine("Wort muss 7 Buchstaben lang sein");
+                        return;
+                    }
+                    controlGuess.Clear();
 
+                    for (int i = 0; i < 7; i++)
+                    {
+                        if (checkInitial.Contains(msg.Wort[i]) && checkInitial[i] == msg.Wort[i])
+                        {
+                            controlGuess.Add("G"); //Gruen
+                        }
+                        else if (checkInitial.Contains(msg.Wort[i]))
+                        {
+                            controlGuess.Add("Y"); //GELB
+                        }
+                        else
+                        {
+                            controlGuess.Add("X"); //GRAU
+                        }
+                    }
+
+                    if (msg.Wort == checkInitial)
+                    {
+                        checkFinished = true;
+                    }
+
+                    MSG Response = new MSG()
+                    {
+                        Type = MessageType.RESPONSE,
+                        Results = controlGuess,
+                        Wort = msg.Wort,
+                        trueOrFalse = checkFinished
                     };
 
-                    transfer.Send(suchAntwort);
-                    Console.WriteLine("Antowrt gesendet: SearchResult!");
+                    transfer.Send(Response);
+                    Console.WriteLine("Antowrt gesendet: RESPONSE!");
                 }
-                else if (msg.Type == MessageType.ALTERNATIVE)
-                {
-                    Console.WriteLine("Request received: " + msg.Type);
+            }
+            else
+            {
+                Console.WriteLine("Already finished");
+            }
 
-                    //List<string> alternativeNamesList = msg.Search.HasTheSameSoundex("Hossein", "en-US");
+            
+        };
 
-
-
-                    var result = alleAlternative.AsQueryable()
-                     .Where(x => x.Sex == msg.Sex)
-                     .SoundexOf(x => x.Name)
-                     .Matching(msg.Search);
-                    List<string> alternativeList = result.Select(x => x.Name).ToList();
-
-
-                    MSG alternativeAntwort = new MSG()
-                    {
-                        Type = MessageType.ALTERNATIVERESULT,
-                        Names = alternativeList
-
-                    };
-
-                    transfer.Send(alternativeAntwort);
-                    Console.WriteLine("Antowrt gesendet: Alternative!");
-                }
-                else if (msg.Type == MessageType.DETAIL)
-                {
-                    Console.WriteLine("Request recieved: " + msg.Type);
-
-                    List<Babyname> jahresListe = db.Babynames
-                                                    .Where(b => b.Name == msg.Search && b.Sex == msg.Sex)
-                                                    .OrderBy(b => b.Year)
-                                                    .ToList();
-
-
-                    MSG alternativeAntwort = new MSG()
-                    {
-                        Type = MessageType.DETAILRESULT,
-                        Details = jahresListe
-
-                    };
-                    transfer.Send(alternativeAntwort);
-                    Console.WriteLine("Antowrt gesendet: Details!");
-                }
-
-
-            };
-
-        Console.ReadLine();
+            Console.ReadLine();
     }
 }
