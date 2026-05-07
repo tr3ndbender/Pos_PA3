@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>WPF_Client</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NetworkLibrary\NetworkLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="NetworkLibrary_2026">
+      <HintPath>..\NetworkLibrary_2026\obj\Debug\net8.0\NetworkLibrary_2026.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
