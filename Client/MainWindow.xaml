@@ -5,81 +5,57 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Client"
         mc:Ignorable="d"
-        Title="3. praktische Arbeit" Height="450" Width="650"
-        x:Name="Fenster">
+        Title="3. praktische Arbeit" Height="450" Width="800">
 
     <Grid Margin="10">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="12*"></ColumnDefinition>
-            <ColumnDefinition Width="2*"></ColumnDefinition>
-            <ColumnDefinition Width="Auto"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="2*"></RowDefinition>
-            <RowDefinition Height="Auto"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="Auto"/>  <!-- Zeile 0: Namenssuche -->
+            <RowDefinition Height="Auto"/>  <!-- Zeile 1: Suchen (Filter) -->
+            <RowDefinition Height="Auto"/>  <!-- Zeile 2: Suchen-Button -->
+            <RowDefinition Height="Auto"/>  <!-- Zeile 3: Gefundene Namen -->
+            <RowDefinition Height="Auto"/>  <!-- Zeile 4: Alternativen -->
+            <RowDefinition Height="*"/>     <!-- Zeile 5: ListBoxen -->
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>   <!-- Links: Labels -->
+            <ColumnDefinition Width="*"/>   <!-- Rechts: Eingaben -->
+        </Grid.ColumnDefinitions>
 
-        <TextBox Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="GuessBox" >Geben Sie ein 7 stelliges Wort ein</TextBox>
-        <Button Margin="1" Grid.Column="2" Height="20" x:Name="submitButton" Click="submitButton_Click">SUBMIT</Button>
+        <!-- Zeile 0 -->
+        <Label    Grid.Row="0" Grid.Column="0" Content="Namenssuche" VerticalAlignment="Center"/>
+        <TextBox  x:Name="namensSucheTB" Grid.Row="0" Grid.Column="1" Margin="0,4"/>
 
-        <ItemsControl ItemsSource="{Binding Zellen}"
-                      Width="420" Height="360"
-                      VerticalAlignment="Center" HorizontalAlignment="Center"
-                      Grid.Column="1"
-                      Grid.Row="1">
+        <!-- Zeile 1 -->
+        <Label    Grid.Row="1" Grid.Column="0" Content="Suchen" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="1" Grid.Column="1" Margin="0,4" x:Name="GenderComboBox">
+            <ComboBoxItem Content="maennlich" Tag="M"/>
+            <ComboBoxItem Content="weiblich" Tag="W"/>
+        </ComboBox>
 
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <UniformGrid Rows="6" Columns="7"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
+        <!-- Zeile 2 -->
+        <Button   x:Name="suchButton" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                  Content="Suchen" Margin="0,4" Click="suchButton_Click"/>
 
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border BorderBrush="Gray" BorderThickness="2" Margin="3"
-                            Background="{Binding Farbe}">
-                        <TextBlock Text="{Binding Buchstabe}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   FontSize="22" FontWeight="Bold"/>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
+        <!-- Zeile 3 -->
+        <Label    Grid.Row="3" Grid.Column="0" Content="Gefundene Namen" VerticalAlignment="Center" />
+        <ComboBox Grid.Row="3" Grid.Column="1" Margin="0,4" Name="FoundNamesComboBox" ItemsSource="{Binding FoundNames}" SelectionChanged="FoundNamesComboBox_SelectionChanged"/>
 
-        </ItemsControl>
+        <!-- Zeile 4 -->
+        <Label    Grid.Row="4" Grid.Column="0" Content="Alternativen" VerticalAlignment="Center"/>
+        <ComboBox Grid.Row="4" Grid.Column="1" Margin="0,4" Name="AlternativeNamesComboBox" SelectionChanged="AlternativeNamesComboBox_SelectionChanged" RenderTransformOrigin="0.5,0.5">
+            <ComboBox.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform/>
+                    <RotateTransform Angle="0.21"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </ComboBox.RenderTransform>
+        </ComboBox>
 
-        <StackPanel Grid.Column="3" Grid.Row="1" x:Name="Statistik" Visibility="Collapsed">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 1. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch1Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 2. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch2Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 3. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch3Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 4. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch4Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 5. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch5Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Erraten bei 6. Versuch:</TextBlock>
-                <TextBlock x:Name="Versuch6Box" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock>Nie erraten:</TextBlock>
-                <TextBlock x:Name="NieErratenBox" Margin="5,0,0,0" Text="0"></TextBlock>
-            </StackPanel>
-        </StackPanel>
+        <!-- Zeile 5: ListBoxen -->
+        <ListBox  x:Name="GroupByYearListBox"     Grid.Row="5" Grid.Column="0" Margin="0,4,5,0"/>
+        <ListBox  x:Name="anzListBox" Grid.Row="5" Grid.Column="1" Margin="5,4,0,0"/>
+
     </Grid>
-    
 </Window>

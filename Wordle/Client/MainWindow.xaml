@@ -1,0 +1,85 @@
+<Window x:Class="Client.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Client"
+        mc:Ignorable="d"
+        Title="3. praktische Arbeit" Height="450" Width="650"
+        x:Name="Fenster">
+
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="12*"></ColumnDefinition>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <TextBox Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="GuessBox" >Geben Sie ein 7 stelliges Wort ein</TextBox>
+        <Button Margin="1" Grid.Column="2" Height="20" x:Name="submitButton" Click="submitButton_Click">SUBMIT</Button>
+
+        <ItemsControl ItemsSource="{Binding Zellen}"
+                      Width="420" Height="360"
+                      VerticalAlignment="Center" HorizontalAlignment="Center"
+                      Grid.Column="1"
+                      Grid.Row="1">
+
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="6" Columns="7"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="Gray" BorderThickness="2" Margin="3"
+                            Background="{Binding Farbe}">
+                        <TextBlock Text="{Binding Buchstabe}"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="22" FontWeight="Bold"/>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+
+        </ItemsControl>
+
+        <StackPanel Grid.Column="3" Grid.Row="1" x:Name="Statistik" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 1. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch1Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 2. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch2Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 3. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch3Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 4. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch4Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 5. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch5Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Erraten bei 6. Versuch:</TextBlock>
+                <TextBlock x:Name="Versuch6Box" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock>Nie erraten:</TextBlock>
+                <TextBlock x:Name="NieErratenBox" Margin="5,0,0,0" Text="0"></TextBlock>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+    
+</Window>
