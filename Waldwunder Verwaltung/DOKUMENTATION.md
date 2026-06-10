@@ -1,0 +1,490 @@
+# Dokumentation: Waldwunder Verwaltung
+
+Eine Schritt-für-Schritt-Erklärung des Projekts, damit du es **verstehst** und **selbst nachprogrammieren** kannst.
+
+---
+
+## 1. Was ist das überhaupt für ein Projekt?
+
+Eine **WPF-Desktop-Anwendung** (Windows-Programm mit grafischer Oberfläche), geschrieben in **C#** auf **.NET 8**.
+
+Zweck der App:
+- Man kann „Waldwunder" (besondere Wälder) **registrieren** (Name, Beschreibung, Bundesland, Koordinaten, Typ, Bilder).
+- Die Daten werden in einer **SQLite-Datenbank** gespeichert.
+- Alle Waldwunder werden links in einer **Liste** angezeigt.
+- Auf einer **Landkarte** (Österreich) werden sie als **rote Punkte** an ihren Koordinaten markiert.
+- Man kann ein Waldwunder auswählen und seine **Details anzeigen**.
+
+### Die verwendeten Technologien (die du fürs Verständnis brauchst)
+
+| Technologie | Wofür |
+|---|---|
+| **WPF** (Windows Presentation Foundation) | Das Framework für die Oberfläche |
+| **XAML** | Die „HTML-ähnliche" Sprache, in der die Oberfläche beschrieben wird |
+| **C#** | Die Programmlogik (Code-Behind) |
+| **SQLite** | Eine kleine Datei-Datenbank (`Waldwunder.db`) |
+| **linq2db** | Eine Bibliothek (ORM), die C#-Objekte mit der Datenbank verbindet |
+
+---
+
+## 2. Projektaufbau – welche Datei macht was?
+
+```
+Waldwunder Verwaltung/
+├── App.xaml / App.xaml.cs          → Startpunkt der Anwendung
+├── MainWindow.xaml                 → Die Oberfläche (was man sieht)
+├── MainWindow.xaml.cs              → Die Logik dahinter (was passiert)
+├── map.png                         → Das Bild der Landkarte
+├── Waldwunder.db                   → Die SQLite-Datenbank
+├── Images/                         → Beispielbilder der Wälder
+└── Models/                         → Die Klassen, die die Datenbank abbilden
+    ├── Waldwunder.cs               → Tabelle "Waldwunder" als C#-Klasse
+    ├── Bilder.cs                   → Tabelle "Bilder" als C#-Klasse
+    └── WaldwunderDB.cs             → Die Verbindung zur Datenbank
+```
+
+### Wie startet die App? (App.xaml)
+
+In `App.xaml` steht die wichtigste Zeile:
+
+```xml
+StartupUri="MainWindow.xaml"
+```
+
+Das heißt: Beim Start wird das **MainWindow** geöffnet. Mehr macht `App.xaml.cs` nicht – es ist leer.
+
+---
+
+## 3. Das Datenmodell (Models-Ordner)
+
+Bevor man die Oberfläche versteht, muss man die **Daten** verstehen. Es gibt zwei Tabellen in der Datenbank.
+
+### 3.1 Die Klasse `Waldwunder` (Models/Waldwunder.cs)
+
+Jedes Waldwunder ist ein Objekt mit diesen Eigenschaften:
+
+```csharp
+[Table("Waldwunder")]              // Verknüpft die Klasse mit der DB-Tabelle "Waldwunder"
+public class Waldwunder
+{
+    [Column("id")]          public long?    Id          { get; set; }  // Eindeutige Nummer (Primärschlüssel)
+    [Column("name")]        public string?  Name        { get; set; }
+    [Column("description")] public string?  Description { get; set; }
+    [Column("province")]    public string?  Province    { get; set; }  // Bundesland
+    [Column("latitude")]    public decimal? Latitude    { get; set; }  // Breitengrad
+    [Column("longitude")]   public decimal? Longitude   { get; set; }  // Längengrad
+    [Column("type")]        public string?  Type        { get; set; }
+    [Column("votes")]       public decimal? Votes       { get; set; }  // Stimmen (im Code nicht genutzt)
+}
+```
+
+**Wichtige Konzepte hier:**
+
+- **`[Table(...)]` und `[Column(...)]`** sind sogenannte *Attribute*. Sie sagen der linq2db-Bibliothek: „Diese Klasse gehört zur Tabelle `Waldwunder`, und diese Eigenschaft entspricht der Spalte `name`." So weiß die Bibliothek, wie sie C#-Objekte und Datenbankzeilen ineinander umwandeln muss.
+- **`long?`, `string?`, `decimal?`** – das Fragezeichen bedeutet „darf auch `null` (leer) sein".
+- **`Id`** hat `IsPrimaryKey = true` (eindeutig) und `IsIdentity = true, SkipOnInsert = true`. Das bedeutet: Die Datenbank vergibt die ID **automatisch** beim Einfügen. Man setzt sie nie selbst.
+- **`{ get; set; }`** ist eine *Property* (Eigenschaft) – die Standard-Art in C#, Werte zu speichern und auszulesen.
+
+### 3.2 Die Klasse `Bilder` (Models/Bilder.cs)
+
+```csharp
+[Table("Bilder")]
+public class Bilder
+{
+    [Column("id")]     public long?    Id     { get; set; }
+    [Column("name")]   public string?  Name   { get; set; }  // Dateiname des Bildes
+    [Column("wonder")] public decimal? Wonder { get; set; }  // ID des Waldwunders, zu dem das Bild gehört
+}
+```
+
+Das Feld **`Wonder`** ist ein **Fremdschlüssel (Foreign Key)**: Es speichert, zu welchem Waldwunder das Bild gehört. So ist eine **1-zu-n-Beziehung** umgesetzt: *Ein* Waldwunder kann *mehrere* Bilder haben.
+
+In beiden Klassen gibt es noch `[Association(...)]`-Blöcke. Das ist die Verknüpfung der beiden Tabellen, sodass man z.B. von einem Waldwunder direkt auf seine Bilder zugreifen könnte (`wonder.Bilders`). In diesem Projekt wird das aber kaum genutzt.
+
+> **Merke:** Die drei Dateien im `Models`-Ordner wurden vom **„LinqToDB scaffolding tool" automatisch erzeugt** (siehe Kommentar `<auto-generated>` oben in den Dateien). Man schreibt sie normalerweise nicht von Hand, sondern lässt sie aus einer bestehenden Datenbank generieren.
+
+### 3.3 Die Datenbankverbindung `WaldwunderDB` (Models/WaldwunderDB.cs)
+
+```csharp
+public partial class WaldwunderDB : DataConnection
+{
+    public WaldwunderDB(DataOptions options) : base(options) { ... }
+
+    public ITable<Bilder>     Bilders     => this.GetTable<Bilder>();
+    public ITable<Waldwunder> Waldwunders => this.GetTable<Waldwunder>();
+}
+```
+
+Diese Klasse ist das **Tor zur Datenbank**. Über `db.Waldwunders` und `db.Bilders` kommt man an die Tabellen. Man kann sie wie normale C#-Listen mit **LINQ** durchsuchen (filtern, sortieren …).
+
+---
+
+## 4. Die Oberfläche (MainWindow.xaml)
+
+XAML beschreibt die Oberfläche als verschachtelte Boxen. Hier der Aufbau von außen nach innen.
+
+### 4.1 Das Grundgerüst: DockPanel + Menü
+
+```xml
+<DockPanel>
+    <Menu DockPanel.Dock="Top">
+        <MenuItem Header="_Neues Waldwunder" Command="New" />
+        <MenuItem Header="_Anzeigen"         Command="Properties"/>
+    </Menu>
+    <Grid> ... </Grid>
+</DockPanel>
+```
+
+- Ein **`DockPanel`** ordnet Elemente an Rändern an. `DockPanel.Dock="Top"` heftet das Menü oben an.
+- Das **`Menu`** hat zwei Einträge. Der Unterstrich (`_Neues`) macht den Buchstaben zum Tastenkürzel (Alt+N).
+- **`Command="New"`** / **`Command="Properties"`** – statt einem direkten Klick-Ereignis benutzen die Menüpunkte ein **Command** (dazu gleich mehr in Abschnitt 5).
+
+### 4.2 Das Layout: ein zweispaltiges Grid
+
+```xml
+<Grid>
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition/>          <!-- Spalte 0: schmal (Liste) -->
+        <ColumnDefinition Width="3*"/> <!-- Spalte 1: 3x so breit (Karte/Dialoge) -->
+    </Grid.ColumnDefinitions>
+    ...
+</Grid>
+```
+
+- **`*`** bedeutet „nimm den verfügbaren Platz anteilig". `3*` ist dreimal so breit wie `*`. Ergebnis: linke Spalte 25 %, rechte Spalte 75 %.
+
+In Spalte 1 liegen **drei Dinge übereinander gestapelt**, von denen immer nur eines sichtbar ist:
+1. `dialog` – das Formular zum Anlegen (anfangs `Collapsed` = unsichtbar)
+2. `showDialog` – die Detailansicht (anfangs unsichtbar)
+3. `mapCanvas` – die Landkarte (anfangs sichtbar)
+
+Durch Umschalten der `Visibility` wechselt die App zwischen Karte, Formular und Detailansicht.
+
+### 4.3 Die Liste links (`lbWaldwunder`)
+
+```xml
+<ListBox Grid.Column="0" Name="lbWaldwunder">
+    <ListBox.ItemTemplate>
+        <DataTemplate>
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="{Binding Name}"/>
+                <TextBlock Text="{Binding Description}"/>
+            </StackPanel>
+        </DataTemplate>
+    </ListBox.ItemTemplate>
+</ListBox>
+```
+
+**Das ist eines der wichtigsten Konzepte – Data Binding:**
+
+- Die `ListBox` bekommt im Code eine Liste von `Waldwunder`-Objekten zugewiesen.
+- Das **`ItemTemplate`** legt fest, **wie ein einzelner Eintrag aussieht**: hier zwei untereinander stehende Texte.
+- **`{Binding Name}`** heißt: „Zeige hier den Wert der Eigenschaft `Name` des jeweiligen Waldwunders." WPF holt sich den Wert automatisch aus dem Objekt. Man muss nicht selbst durch die Liste laufen und Texte setzen.
+
+### 4.4 Das Formular „Neues Waldwunder" (`dialog`)
+
+Ein Grid mit Eingabefeldern (`TextBox`), jeweils mit einem `Name`, damit der Code sie ansprechen kann:
+
+```xml
+<TextBox Name="tbName"/>
+<TextBox Name="tbDescription"/>
+<TextBox Name="tbProvince"/>
+<TextBox Name="tbLatitude"/>
+<TextBox Name="tbLongitude"/>
+<TextBox Name="tbType"/>
+```
+
+Plus Buttons:
+```xml
+<Button Content="Registrieren" Click="Register_Click"/>
+<Button Content="Abbrechen"    Click="Cancel_Click"/>
+<Button Content="Bild hinzufügen" Click="btnOpenFile_Click"/>
+```
+
+- **`Click="Register_Click"`** verbindet den Button mit einer Methode im Code-Behind. Beim Klick wird `Register_Click(...)` ausgeführt.
+- Daneben eine `ListBox` namens `lbImages`, die die ausgewählten Bilddateinamen anzeigt.
+
+### 4.5 Die Detailansicht (`showDialog`)
+
+Fast gleich aufgebaut, aber statt Eingabefeldern nur **Anzeige-Texte**. Der Clou steht im öffnenden Tag:
+
+```xml
+<Grid Name="showDialog"
+      DataContext="{Binding ElementName=lbWaldwunder, Path=SelectedItem}">
+```
+
+- **`DataContext`** ist die „Datenquelle" für alle Bindings darin.
+- Hier: „Nimm als Datenquelle das **gerade ausgewählte Element** der Liste `lbWaldwunder`."
+- Dadurch zeigen die `TextBlock`s mit `{Binding Name}`, `{Binding Province}` usw. automatisch die Werte des markierten Waldwunders.
+- Die Bilder kommen über `ItemsSource="{Binding ImagePaths}"` (Hinweis: diese Eigenschaft existiert in der Klasse aktuell nicht – ein offener Punkt, siehe Abschnitt 8).
+
+### 4.6 Die Landkarte (`mapCanvas`)
+
+```xml
+<Canvas x:Name="mapCanvas" Grid.Column="1" SizeChanged="mapCanvas_SizeChanged">
+    <Canvas.Background>
+        <ImageBrush ImageSource="map.png" Stretch="Fill"/>
+    </Canvas.Background>
+</Canvas>
+```
+
+- Ein **`Canvas`** ist eine Zeichenfläche, auf der man Elemente mit **exakten Koordinaten** (X/Y in Pixeln) platzieren kann. Genau das braucht man für Kartenmarkierungen.
+- Als Hintergrund dient das Kartenbild `map.png`.
+- **`SizeChanged="mapCanvas_SizeChanged"`** – wenn sich die Größe ändert (Fenster vergrößern), werden die Punkte neu berechnet, damit sie an der richtigen Stelle bleiben.
+
+---
+
+## 5. Commands vs. Click-Events – ein wichtiger WPF-Unterschied
+
+Das Projekt nutzt **beides**, und für den Test solltest du den Unterschied kennen.
+
+### Einfache Click-Events
+Buttons wie „Registrieren" nutzen `Click="Register_Click"`. Simpel: Klick → Methode läuft.
+
+### Commands (für die Menüpunkte)
+Die Menüpunkte nutzen **eingebaute WPF-Commands** (`New`, `Properties`). Verknüpft werden sie oben im Fenster:
+
+```xml
+<Window.CommandBindings>
+    <CommandBinding Command="New"        Executed="NewWonder_Executed" CanExecute="NewWonder_CanExecute"/>
+    <CommandBinding Command="Properties" Executed="Anzeigen_Executed"  CanExecute="Anzeigen_CanExecute"/>
+</Window.CommandBindings>
+```
+
+Ein Command hat **zwei** Methoden:
+- **`Executed`** – was passiert, wenn man es auslöst.
+- **`CanExecute`** – *ob* man es überhaupt auslösen darf. Liefert `false` → der Menüpunkt wird **automatisch ausgegraut**.
+
+Beispiel `Anzeigen_CanExecute`: „Anzeigen" ist nur erlaubt, wenn ein Listeneintrag ausgewählt ist **und** gerade kein anderer Dialog offen ist:
+
+```csharp
+if (lbWaldwunder?.SelectedItem == null
+    || dialog?.Visibility == Visibility.Visible
+    || showDialog?.Visibility == Visibility.Visible)
+    e.CanExecute = false;
+else
+    e.CanExecute = true;
+```
+
+Das ist der **Vorteil von Commands**: Die Oberfläche aktiviert/deaktiviert sich selbst, ohne dass man es überall manuell steuern muss.
+
+---
+
+## 6. Die Programmlogik (MainWindow.xaml.cs) – Schritt für Schritt
+
+### 6.1 Felder & Konstruktor – Start der App
+
+```csharp
+public ObservableCollection<Waldwunder> waldwunders = new();
+public WaldwunderDB db = new WaldwunderDB(
+        new DataOptions().UseSQLite(@"Data Source=./Waldwunder.db"));
+
+public MainWindow()
+{
+    InitializeComponent();                 // Baut die XAML-Oberfläche auf
+
+    foreach (var x in db.Waldwunders)      // Alle Waldwunder aus der DB laden
+        waldwunders.Add(x);
+
+    lbWaldwunder.ItemsSource = waldwunders; // Liste mit der Sammlung verbinden
+}
+```
+
+**Zwei zentrale Dinge:**
+
+1. **`ObservableCollection`** statt einer normalen `List`: Eine `ObservableCollection` **meldet der Oberfläche automatisch**, wenn sich ihr Inhalt ändert (etwas hinzugefügt/entfernt wird). Fügt man also später ein Waldwunder hinzu, erscheint es **sofort** in der ListBox – ganz ohne extra Code. Das ist der Grund, warum man hier nicht `List<>` nimmt.
+
+2. **`db = new WaldwunderDB(... UseSQLite(...))`**: Stellt die Verbindung zur Datei `Waldwunder.db` her. `db.Waldwunders` liest beim Start alle Zeilen der Tabelle aus.
+
+`ItemsSource = waldwunders` verbindet die ListBox mit der Sammlung – ab jetzt spiegelt die Liste immer den Inhalt von `waldwunders`.
+
+### 6.2 Die Karte zeichnen – `MarkWonders()`
+
+Das ist das **mathematisch interessanteste** Stück. Es rechnet Geo-Koordinaten in Pixel um.
+
+```csharp
+private void MarkWonders()
+{
+    mapCanvas.Children.Clear();            // Alte Punkte entfernen
+
+    // Die geografischen Grenzen, die das Kartenbild abdeckt (Österreich):
+    double west  = 9.362383;   // linker Rand  (Längengrad)
+    double east  = 17.231941;  // rechter Rand
+    double north = 49.063175;  // oberer Rand  (Breitengrad)
+    double south = 46.308597;  // unterer Rand
+
+    double w = mapCanvas.ActualWidth;      // aktuelle Pixelbreite der Karte
+    double h = mapCanvas.ActualHeight;     // aktuelle Pixelhöhe
+
+    foreach (var wonder in waldwunders)
+    {
+        double lon = (double)wonder.Longitude.GetValueOrDefault();
+        double lat = (double)wonder.Latitude.GetValueOrDefault();
+
+        // Geo-Koordinaten → Pixel umrechnen:
+        double xPos = (lon - west) / (east - west) * w;
+        double yPos = (north - lat) / (north - south) * h;
+
+        var marker = new Ellipse {          // Ein roter Punkt
+            Width = 10, Height = 10,
+            Fill = Brushes.Red,
+            Stroke = Brushes.White,
+            StrokeThickness = 1,
+            ToolTip = wonder.Name            // Name beim Drüberfahren
+        };
+
+        Canvas.SetLeft(marker, xPos - 5);    // Punkt platzieren (−5 = zentrieren)
+        Canvas.SetTop(marker, yPos - 5);
+        mapCanvas.Children.Add(marker);
+    }
+}
+```
+
+**Das Prinzip der Umrechnung (das musst du erklären können):**
+
+- Die Karte deckt einen Längengrad-Bereich von `west` bis `east` ab. Ein Punkt mit Längengrad `lon` liegt **anteilig** dazwischen:
+  `(lon − west) / (east − west)` ergibt einen Wert zwischen 0 (ganz links) und 1 (ganz rechts).
+  Mal die Pixelbreite `w` ⇒ die **X-Position in Pixeln**.
+
+- Bei der Höhe ist es **umgekehrt**, weil Bildschirm-Y **nach unten** wächst, der Breitengrad aber nach **oben**: Deshalb `(north − lat)`. Oben (großer Breitengrad) ⇒ kleines Y; unten ⇒ großes Y.
+
+- **`− 5`** beim Platzieren: Der Punkt ist 10 px groß; verschiebt man ihn um seinen halben Durchmesser, sitzt sein **Mittelpunkt** genau auf der Koordinate.
+
+`MarkWonders()` wird an zwei Stellen aufgerufen: beim Laden des Fensters (`Window_Loaded`) und bei jeder Größenänderung (`mapCanvas_SizeChanged`).
+
+### 6.3 Neues Waldwunder anlegen
+
+**Schritt 1 – Formular öffnen** (`NewWonder_Executed`, ausgelöst durch Menü „Neues Waldwunder"):
+```csharp
+dialog.Visibility    = Visibility.Visible;     // Formular zeigen
+mapCanvas.Visibility = Visibility.Collapsed;   // Karte verstecken
+```
+
+**Schritt 2 – Bilder auswählen** (`btnOpenFile_Click`):
+```csharp
+OpenFileDialog openFileDialog = new() { Multiselect = true };
+if (openFileDialog.ShowDialog() == true)
+    foreach (String filename in openFileDialog.FileNames)
+        lbImages.Items.Add(Path.GetFileName(filename)); // nur den Dateinamen merken
+```
+Öffnet den Windows-„Datei öffnen"-Dialog. Die ausgewählten **Dateinamen** landen in der Liste `lbImages`.
+
+**Schritt 3 – Speichern** (`Register_Click`):
+```csharp
+dialog.Visibility    = Visibility.Collapsed;   // zurück zur Karte
+mapCanvas.Visibility = Visibility.Visible;
+
+Waldwunder waldwunder = new() {                // Objekt aus den Eingaben bauen
+    Name = tbName.Text,
+    Description = tbDescription.Text,
+    Province = tbProvince.Text,
+    Type = tbType.Text,
+};
+
+try {                                          // Zahlen können fehlschlagen → try/catch
+    waldwunder.Longitude = decimal.Parse(tbLongitude.Text);
+    waldwunder.Latitude  = decimal.Parse(tbLatitude.Text);
+} catch { /* Fehler ignorieren */ }
+
+db.Insert(waldwunder);                         // In die DB schreiben (vergibt die Id)
+waldwunders.Add(waldwunder);                   // In die Liste → erscheint sofort in der UI
+
+foreach (string img in lbImages.Items) {       // Jedes Bild als eigenen DB-Eintrag
+    Bilder bild = new() { Name = img, Wonder = waldwunder.Id };
+    db.Insert(bild);
+}
+```
+
+**Wichtig zu verstehen:**
+- **`decimal.Parse`** wandelt den eingegebenen Text in eine Zahl. Gibt der Nutzer Unsinn ein, würde es einen Absturz geben – deshalb der **`try/catch`**, der den Fehler abfängt (hier ohne Behandlung).
+- **`db.Insert(waldwunder)`** schreibt die Zeile in SQLite. Danach hat `waldwunder.Id` die von der DB vergebene Nummer – die wird gebraucht, um die Bilder über `Wonder = waldwunder.Id` zuzuordnen.
+- Weil `waldwunders` eine `ObservableCollection` ist, taucht der neue Eintrag **sofort** links in der Liste auf.
+
+### 6.4 Details anzeigen (`Anzeigen_Executed`)
+
+```csharp
+var selectedWonder = lbWaldwunder.SelectedItem as Waldwunder;
+if (selectedWonder != null) {
+    showDialog.DataContext = selectedWonder;     // Datenquelle setzen
+    showDialog.Visibility  = Visibility.Visible;
+    mapCanvas.Visibility   = Visibility.Collapsed;
+    dialog.Visibility      = Visibility.Collapsed;
+}
+```
+- **`as Waldwunder`** wandelt das ausgewählte Listenelement in ein `Waldwunder`-Objekt um (oder `null`, wenn nichts passt).
+- Durch Setzen des `DataContext` füllen sich alle `{Binding ...}`-Texte in der Detailansicht automatisch.
+
+### 6.5 Abbrechen (`Cancel_Click`)
+
+```csharp
+dialog.Visibility     = Visibility.Collapsed;
+showDialog.Visibility = Visibility.Collapsed;
+tbDescription.Text = tbName.Text = tbLatitude.Text =
+    tbLongitude.Text = tbProvince.Text = tbType.Text = "";  // Felder leeren
+lbImages.Items.Clear();                                     // Bilderliste leeren
+mapCanvas.Visibility  = Visibility.Visible;                 // zurück zur Karte
+```
+Versteckt beide Dialoge, **leert alle Eingabefelder** und zeigt wieder die Karte.
+
+---
+
+## 7. Der komplette Ablauf im Überblick (Lebenszyklus)
+
+```
+App-Start
+   │
+   ├─ App.xaml öffnet MainWindow
+   ├─ Konstruktor: DB-Verbindung + alle Waldwunder in die Liste laden
+   └─ Window_Loaded → MarkWonders() zeichnet rote Punkte auf die Karte
+        │
+        ▼
+   Hauptansicht: links Liste, rechts Karte
+        │
+        ├─ Menü "Neues Waldwunder"
+        │     → Formular zeigen → Felder ausfüllen → ggf. Bilder wählen
+        │     → "Registrieren": db.Insert + Liste aktualisieren → zurück zur Karte
+        │     → "Abbrechen": Felder leeren → zurück zur Karte
+        │
+        └─ Eintrag in Liste wählen → Menü "Anzeigen"
+              → Detailansicht mit den Werten des Waldwunders
+              → "Abbrechen": zurück zur Karte
+```
+
+---
+
+## 8. Schwachstellen / offene Punkte (gut für Verständnisfragen)
+
+Wenn du es selbst nachbaust, fallen dir diese Stellen auf – sie zeigen, dass du das Projekt wirklich durchdrungen hast:
+
+1. **`{Binding ImagePaths}` in der Detailansicht** (XAML Zeile 119) bezieht sich auf eine Eigenschaft `ImagePaths`, die es in der Klasse `Waldwunder` **nicht gibt**. Die Bilder eines Waldwunders werden also in der Detailansicht **nicht** angezeigt. Korrekt wäre, die zugehörigen `Bilder` aus der DB zu laden (z. B. über die `Bilders`-Association).
+2. **`Votes`** ist im Modell vorhanden, wird aber nirgends verwendet.
+3. **`btnRemoveImage_Click`** ist leer – Bilder lassen sich nicht wieder entfernen.
+4. **Der `catch`-Block beim Parsen ist leer**: Gibt man ungültige Koordinaten ein, passiert stillschweigend nichts (Längen-/Breitengrad bleiben leer), und der Punkt landet bei (0/0) auf der Karte.
+5. **Kein „Bearbeiten" oder „Löschen"** von bestehenden Waldwundern.
+
+---
+
+## 9. Wie du es selbst nachprogrammierst – Checkliste
+
+1. **Projekt anlegen:** Visual Studio → „WPF Application" (.NET 8).
+2. **NuGet-Pakete installieren:** `linq2db`, `linq2db.SQLite`, `Microsoft.Data.Sqlite`.
+3. **Datenbank erstellen:** SQLite-Datei mit zwei Tabellen `Waldwunder` (id, name, description, province, latitude, longitude, type, votes) und `Bilder` (id, name, wonder).
+4. **Modelle erzeugen:** Per linq2db-Scaffolding aus der DB generieren **oder** die drei Klassen aus `Models/` von Hand schreiben.
+5. **XAML bauen:** DockPanel → Menü oben; Grid mit 2 Spalten; links ListBox mit ItemTemplate; rechts drei überlagerte Bereiche (Formular, Detailansicht, Canvas mit Karte).
+6. **Code-Behind:**
+   - Konstruktor: `ObservableCollection` füllen, `ItemsSource` setzen.
+   - `MarkWonders()` mit der Koordinaten-Umrechnung.
+   - Command-Handler (`Executed` + `CanExecute`) für „Neu" und „Anzeigen".
+   - Click-Handler: `Register_Click`, `Cancel_Click`, `btnOpenFile_Click`.
+7. **`map.png`** und **`Waldwunder.db`** ins Projekt aufnehmen; bei der `.db` im csproj `CopyToOutputDirectory = Always` setzen, damit sie neben der .exe landet.
+
+### Die Konzepte, die du fürs Verständnis parat haben solltest
+- **XAML & Layout-Container** (DockPanel, Grid, StackPanel, Canvas)
+- **Data Binding** (`{Binding ...}`, `DataContext`, `ItemsSource`, `ItemTemplate`)
+- **`ObservableCollection`** und warum sie die UI automatisch aktualisiert
+- **Commands** (`Executed`/`CanExecute`) gegenüber einfachen **Click-Events**
+- **ORM mit linq2db**: Klassen ↔ Tabellen über `[Table]`/`[Column]`, `db.Insert(...)`
+- **Geo-zu-Pixel-Umrechnung** auf dem Canvas
+- **`Visibility`-Umschaltung**, um zwischen Ansichten zu wechseln
+```
+
