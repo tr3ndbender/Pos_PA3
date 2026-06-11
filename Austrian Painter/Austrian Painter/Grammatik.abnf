@@ -1,0 +1,27 @@
+; ============================================================
+;  Grammatik fuer die Painter-Sprache in ABNF (RFC 5234)
+; ============================================================
+;  Die einzelnen Tokens werden im Code durch Leerzeichen bzw.
+;  Zeilenumbrueche getrennt (WSP = Space/Tab, gov. vom Tokenizer).
+; ------------------------------------------------------------
+
+program     = *statement
+
+statement   = turn / draw / color / for
+
+turn        = "TURN" SP direction SP number
+direction   = "LEFT" / "RIGHT"
+
+draw        = "DRAW" SP number
+
+color       = "COLOR" SP colorname
+colorname   = 1*ALPHA          ; z.B. White, Red, Blue, Green
+
+for         = "FOR" SP number SP block
+block       = "{" *statement "}"
+
+number      = 1*DIGIT
+
+; ALPHA  = %x41-5A / %x61-7A   (Buchstaben, aus RFC 5234)
+; DIGIT  = %x30-39             (Ziffern,    aus RFC 5234)
+; SP     = %x20                (Leerzeichen, aus RFC 5234)
