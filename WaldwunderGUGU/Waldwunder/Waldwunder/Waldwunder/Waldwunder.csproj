@@ -1,0 +1,107 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Bilder\Ahornriesen1.jpg" />
+    <None Remove="Bilder\Ahornriesen2.jpg" />
+    <None Remove="Bilder\Ahornriesen3.jpg" />
+    <None Remove="Bilder\Asketenwald1.jpg" />
+    <None Remove="Bilder\Asketenwald2.jpg" />
+    <None Remove="Bilder\Bergsturzwald1.jpg" />
+    <None Remove="Bilder\Bergsturzwald2.jpg" />
+    <None Remove="Bilder\Bergsturzwald3.jpg" />
+    <None Remove="Bilder\Bergsturzwald4.jpg" />
+    <None Remove="Bilder\Buchen-Kathedralen1.jpg" />
+    <None Remove="Bilder\Buchen-Kathedralen2.jpg" />
+    <None Remove="Bilder\Buchen-Kathedralen3.jpg" />
+    <None Remove="Bilder\Dirndl-Wald1.jpg" />
+    <None Remove="Bilder\Dirndl-Wald2.jpg" />
+    <None Remove="Bilder\Dirndl-Wald3.jpg" />
+    <None Remove="Bilder\images.zip" />
+    <None Remove="Bilder\Unterwasserwald1.jpg" />
+    <None Remove="Bilder\Unterwasserwald2.jpg" />
+    <None Remove="Bilder\Unterwasserwald3.jpg" />
+    <None Remove="Bilder\Unterwasserwald4.jpg" />
+    <None Remove="Bilder\Urige Steirer-Zirben1.jpg" />
+    <None Remove="Bilder\Urige Steirer-Zirben2.jpg" />
+    <None Remove="Bilder\Urige Steirer-Zirben3.jpg" />
+    <None Remove="Bilder\Urige Steirer-Zirben4.jpg" />
+    <None Remove="Bilder\Urige Steirer-Zirben5.jpg" />
+    <None Remove="Bilder\Waldreich1.jpg" />
+    <None Remove="Bilder\Waldreich2.jpg" />
+    <None Remove="Bilder\Waldreich3.jpg" />
+    <None Remove="Bilder\Waldreich4.jpg" />
+    <None Remove="blobid0.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="linq2db" Version="6.3.0" />
+    <PackageReference Include="linq2db.SQLite" Version="6.3.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Bilder\Ahornriesen1.jpg" />
+    <Resource Include="Bilder\Ahornriesen2.jpg" />
+    <Resource Include="Bilder\Ahornriesen3.jpg" />
+    <Resource Include="Bilder\Asketenwald1.jpg" />
+    <Resource Include="Bilder\Asketenwald2.jpg" />
+    <Resource Include="Bilder\Bergsturzwald1.jpg" />
+    <Resource Include="Bilder\Bergsturzwald2.jpg" />
+    <Resource Include="Bilder\Bergsturzwald3.jpg" />
+    <Resource Include="Bilder\Bergsturzwald4.jpg" />
+    <Resource Include="Bilder\Buchen-Kathedralen1.jpg" />
+    <Resource Include="Bilder\Buchen-Kathedralen2.jpg" />
+    <Resource Include="Bilder\Buchen-Kathedralen3.jpg" />
+    <Resource Include="Bilder\Dirndl-Wald1.jpg" />
+    <Resource Include="Bilder\Dirndl-Wald2.jpg" />
+    <Resource Include="Bilder\Dirndl-Wald3.jpg" />
+    <Resource Include="Bilder\images.zip" />
+    <Resource Include="Bilder\Unterwasserwald1.jpg" />
+    <Resource Include="Bilder\Unterwasserwald2.jpg" />
+    <Resource Include="Bilder\Unterwasserwald3.jpg" />
+    <Resource Include="Bilder\Unterwasserwald4.jpg" />
+    <Resource Include="Bilder\Urige Steirer-Zirben1.jpg" />
+    <Resource Include="Bilder\Urige Steirer-Zirben2.jpg" />
+    <Resource Include="Bilder\Urige Steirer-Zirben3.jpg" />
+    <Resource Include="Bilder\Urige Steirer-Zirben4.jpg" />
+    <Resource Include="Bilder\Urige Steirer-Zirben5.jpg" />
+    <Resource Include="Bilder\Waldreich1.jpg" />
+    <Resource Include="Bilder\Waldreich2.jpg" />
+    <Resource Include="Bilder\Waldreich3.jpg" />
+    <Resource Include="Bilder\Waldreich4.jpg" />
+    <Resource Include="blobid0.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Waldwunder.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Waldwunder.generated.cs</LastGenOutput>
+    </None>
+    <None Update="Waldwunder.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Waldwunder.generated.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Waldwunder.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+</Project>

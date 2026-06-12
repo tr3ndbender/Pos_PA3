@@ -1,0 +1,66 @@
+﻿<Window x:Class="WaldwunderDB.WaldwunderAnzeigen"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WaldwunderDB"
+        mc:Ignorable="d"
+        Title="WaldwunderAnzeigen" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Name:" Margin="5"/>
+        <TextBlock Grid.Row="1" Text="Beschreibung:" Margin="5"/>
+        <TextBlock Grid.Row="2" Text="Bundesland:" Margin="5"/>
+        <TextBlock Grid.Row="3" Text="Latitude:" Margin="5"/>
+        <TextBlock Grid.Row="4" Text="Longitude:" Margin="5"/>
+        <TextBlock Grid.Row="5" Text="Art:" Margin="5"/>
+        <TextBlock Grid.Row="6" Text="Stimmen:" Margin="5"/>
+
+
+        <TextBlock Grid.Row="0" Grid.Column="1"
+           Text="{Binding Name}" Margin="5"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="1"
+           Text="{Binding Description}" Margin="5" TextWrapping="Wrap"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="1"
+           Text="{Binding Province}" Margin="5"/>
+
+        <TextBlock Grid.Row="3" Grid.Column="1"
+           Text="{Binding Latitude}" Margin="5"/>
+
+        <TextBlock Grid.Row="4" Grid.Column="1"
+           Text="{Binding Longitude}" Margin="5"/>
+
+        <TextBlock Grid.Row="5" Grid.Column="1"
+           Text="{Binding Type}" Margin="5"/>
+
+        <TextBlock Grid.Row="6" Grid.Column="1"
+           Text="{Binding Votes}" Margin="5"/>
+
+
+        <ListBox Grid.RowSpan="8" Grid.Column="2">
+            <Image x:Name="WaldwunderBild">
+            </Image>
+        </ListBox>
+
+        <Button x:Name="NaechstesBild" Click="NaechstesBild_Click" Grid.Row="9">Nächstes Bild</Button>
+
+    </Grid>
+</Window>

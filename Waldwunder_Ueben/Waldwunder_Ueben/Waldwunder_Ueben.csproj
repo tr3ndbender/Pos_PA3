@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Bilder\*.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="linq2db" Version="6.3.0" />
+    <PackageReference Include="linq2db.SQLite" Version="6.3.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Waldwunder.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Alle Bilder im Bilder-Ordner werden als Dateien ins Ausgabeverzeichnis kopiert -->
+    <Content Include="Bilder\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!-- map.png bleibt Resource, weil es im XAML per ImageSource="map.png" eingebettet geladen wird -->
+    <Resource Include="map.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
+</Project>
